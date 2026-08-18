@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ISRO Mission Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="scanlines"></div>
+
+<div class="console">
+
+  <!-- ===== Control panel header ===== -->
+  <header class="panel-head">
+    <div class="head-left">
+      <div class="isro-mark" aria-hidden="true">
+        <div class="orbit-ring"></div>
+        <div class="orbit-dot"></div>
+      </div>
+      <div>
+        <p class="eyebrow">भारतीय अंतरिक्ष अनुसंधान संगठन &middot; ISRO Mission Control</p>
+        <h1 class="brand">MISSION LOG</h1>
+      </div>
+    </div>
+    <div class="head-right">
+      <button class="btn-specs" id="specsBtn" type="button">ROCKET SPECS</button>
+      <div class="clock" id="clock">--:--:--</div>
+      <div class="clock-label">IST &middot; LIVE FEED</div>
+    </div>
+  </header>
+
+  <!-- ===== Stat strip ===== -->
+  <section class="stat-strip" id="statStrip" aria-label="Fleet summary">
+    <div class="stat"><span class="stat-num" id="statTotal">0</span><span class="stat-label">Total Missions</span></div>
+    <div class="stat"><span class="stat-num" id="statActive">0</span><span class="stat-label">Active</span></div>
+    <div class="stat"><span class="stat-num" id="statSuccess">0</span><span class="stat-label">Completed</span></div>
+    <div class="stat"><span class="stat-num" id="statPlanned">0</span><span class="stat-label">Planned</span></div>
+  </section>
+
+  <div class="deck">
+
+    <!-- ===== Status filter lights ===== -->
+    <nav class="status-lights" id="statusFilters" aria-label="Filter by mission status">
+      <button class="light active" data-status="All"><i class="dot"></i>ALL SYSTEMS</button>
+      <button class="light" data-status="Planned"><i class="dot dot-amber"></i>PLANNED</button>
+      <button class="light" data-status="Active"><i class="dot dot-green"></i>ACTIVE</button>
+      <button class="light" data-status="Completed"><i class="dot dot-blue"></i>COMPLETED</button>
+      <button class="light" data-status="Failed"><i class="dot dot-red"></i>ANOMALY</button>
+    </nav>
+
+    <div class="deck-toolbar">
+      <input type="text" id="searchInput" placeholder="SEARCH MISSION / VEHICLE / PAYLOAD&hellip;" autocomplete="off">
+      <select id="categoryFilter">
+        <option value="All">ALL CATEGORIES</option>
+        <option value="Earth Observation">Earth Observation</option>
+        <option value="Communication">Communication</option>
+        <option value="Navigation">Navigation</option>
+        <option value="Lunar">Lunar</option>
+        <option value="Interplanetary">Interplanetary</option>
+        <option value="Astronomy">Astronomy</option>
+        <option value="Human Spaceflight">Human Spaceflight</option>
+        <option value="Technology Demo">Technology Demo</option>
+      </select>
+      <button class="btn-launch" id="newMissionBtn" type="button">+ LOG NEW MISSION</button>
+    </div>
+
+    <!-- ===== Mission grid ===== -->
+    <main class="grid" id="grid"></main>
+
+    <!-- ===== Empty state ===== -->
+    <div class="empty-console" id="emptyState" hidden>
+      <p class="no-signal">NO SIGNAL</p>
+      <p>No missions match this filter. Adjust the query or log a new one.</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== Mission editor (modal) ===== -->
+<div class="overlay" id="overlay" hidden>
+  <form class="editor" id="missionForm" novalidate>
+    <div class="editor-head">
+      <p class="editor-kicker">MISSION DATA ENTRY</p>
+      <h2 id="editorTitle">New Mission</h2>
+      <button type="button" class="close-x" id="closeBtn" aria-label="Close">&times;</button>
+    </div>
+
+    <input type="hidden" id="missionId">
+
+    <label class="field">
+      <span>Mission Name</span>
+      <input type="text" id="fName" required maxlength="60" placeholder="Chandrayaan-4">
+    </label>
+
+    <div class="field-row">
+      <label class="field">
+        <span>Vehicle</span>
+        <input type="text" id="fVehicle" maxlength="40" placeholder="LVM3 / PSLV / GSLV">
+      </label>
+      <label class="field">
+        <span>Status</span>
+        <select id="fStatus">
+          <option>Planned</option>
+          <option>Active</option>
+          <option>Completed</option>
+          <option>Failed</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="field-row">
+      <label class="field">
+        <span>Category</span>
+        <select id="fCategory">
+          <option>Earth Observation</option>
+          <option>Communication</option>
+          <option>Navigation</option>
+          <option>Lunar</option>
+          <option>Interplanetary</option>
+          <option>Astronomy</option>
+          <option>Human Spaceflight</option>
+          <option>Technology Demo</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Launch Date</span>
+        <input type="date" id="fDate">
+      </label>
+    </div>
+
+    <label class="field">
+      <span>Launch Site</span>
+      <input type="text" id="fSite" maxlength="40" placeholder="Sriharikota">
+    </label>
+
+    <label class="field">
+      <span>Payload / Objective</span>
+      <input type="text" id="fPayload" maxlength="80" placeholder="Lunar sample return demonstrator">
+    </label>
+
+    <label class="field">
+      <span>Mission Notes <em>(one log entry per line)</em></span>
+      <textarea id="fNotes" rows="5" placeholder="Trans-lunar injection nominal.&#10;Orbit circularisation complete.&#10;Awaiting landing window."></textarea>
+    </label>
+
+    <label class="priority-check">
+      <input type="checkbox" id="fFlagship">
+      <span>Flagship mission &#9733;</span>
+    </label>
+
+    <div class="editor-actions">
+      <button type="button" class="btn-ghost danger" id="deleteBtn" hidden>Scrub mission</button>
+      <div class="spacer"></div>
+      <button type="button" class="btn-ghost" id="cancelBtn">Cancel</button>
+      <button type="submit" class="btn-launch">Commit to Log</button>
+    </div>
+  </form>
+</div>
+
+<!-- ===== Mission detail (read view) ===== -->
+<div class="overlay" id="detailOverlay" hidden>
+  <article class="detail" id="detailCard">
+    <button type="button" class="close-x" id="detailCloseBtn" aria-label="Close">&times;</button>
+    <div class="detail-icon" id="dIcon"></div>
+    <p class="detail-status" id="dStatus">STATUS</p>
+    <h2 id="dName">Mission Name</h2>
+    <p class="detail-meta" id="dMeta">Vehicle &middot; Date &middot; Site</p>
+    <p class="detail-cat" id="dCat"></p>
+    <p class="detail-payload" id="dPayload"></p>
+
+    <h3>Mission Log</h3>
+    <ol class="log-entries" id="dNotes"></ol>
+
+    <div class="detail-actions">
+      <button type="button" class="btn-ghost" id="editFromDetailBtn">Edit Mission</button>
+    </div>
+  </article>
+</div>
+
+<template id="cardTemplate">
+  <article class="mcard" tabindex="0">
+    <div class="mcard-top">
+      <span class="mcard-status"></span>
+      <span class="mcard-flag">&#9733;</span>
+    </div>
+    <div class="mcard-icon"></div>
+    <h3 class="mcard-name"></h3>
+    <p class="mcard-vehicle"></p>
+    <p class="mcard-payload"></p>
+    <div class="mcard-bottom">
+      <span class="mcard-cat"></span>
+      <span class="mcard-date"></span>
+    </div>
+  </article>
+</template>
+
+<!-- ===== Rocket specifications (reference panel) ===== -->
+<div class="overlay" id="specsOverlay" hidden>
+  <article class="specs-panel">
+    <button type="button" class="close-x" id="specsCloseBtn" aria-label="Close">&times;</button>
+    <p class="editor-kicker">LAUNCH VEHICLE FLEET</p>
+    <h2>Rocket Specifications</h2>
+    <p class="specs-intro">Every launch vehicle family ISRO has flown, from the first all-solid SLV-3 to the human-rated LVM3.</p>
+    <div class="specs-grid" id="specsGrid"></div>
+  </article>
+</div>
+
+<template id="specCardTemplate">
+  <article class="spec-card">
+    <div class="spec-illustration"></div>
+    <div class="spec-head">
+      <h3 class="spec-name"></h3>
+      <span class="spec-status"></span>
+    </div>
+    <p class="spec-era"></p>
+    <div class="spec-figures">
+      <div><span class="spec-label">Height</span><span class="spec-value spec-height"></span></div>
+      <div><span class="spec-label">Diameter</span><span class="spec-value spec-diameter"></span></div>
+      <div><span class="spec-label">Liftoff Mass</span><span class="spec-value spec-mass"></span></div>
+      <div><span class="spec-label">Stages</span><span class="spec-value spec-stages"></span></div>
+    </div>
+    <div class="spec-figures">
+      <div><span class="spec-label">Payload to LEO</span><span class="spec-value spec-leo"></span></div>
+      <div><span class="spec-label">Payload to GTO</span><span class="spec-value spec-gto"></span></div>
+    </div>
+    <p class="spec-record"></p>
+    <p class="spec-notes"></p>
+  </article>
+</template>
+
+<script src="script.js"></script>
+</body>
+</html>
